@@ -11,31 +11,35 @@ import (
 )
 
 func main() {
+    showError := func(m string, e error) {
+      fmt.Fprintln(os.Stderr, m, e.Error());
+    }
+
     reader := bufio.NewReader(os.Stdin);
     input, _ := reader.ReadString('\n');
 
     data, e := base64.StdEncoding.DecodeString(input);
     if e != nil {
-        fmt.Fprintln(os.Stderr, "Unable to decode base64 input.", e);
+        showError("Unable to decode base64 input: %s", e);
         return;
     }
 
     pk := new(PrivateKey);
     e = proto.Unmarshal(data, pk);
     if e != nil {
-        fmt.Fprintln(os.Stderr, "Unable to unmarshal protobuf data.", e);
+        showError("Unable to unmarshal protobuf data: %s", e);
         return;
     }
 
     sk, e := x509.ParsePKCS1PrivateKey(pk.GetData())
     if  e != nil {
-        fmt.Fprintln(os.Stderr, "Failed to parse key.", e);
+        showError("Failed to parse key: %s", e);
         return;
     }
 
     e = sk.Validate();
     if  e != nil {
-        fmt.Fprintln(os.Stderr, "Key validation failed.", e);
+        showError("Key validation failed: %s", e);
         return;
     }
 
